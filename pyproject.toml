@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "igcsea"
+version = "0.1.0"
+description = "Inverse Gas Chromatography Surface Energy Analysis toolkit"
+authors = [{name = "Codie Freeman"}]
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+keywords = ["igc", "surface-energy", "chromatography", "materials-science"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+
+dependencies = [
+    "numpy>=1.21",
+    "pandas>=1.3",
+    "matplotlib>=3.4",
+    "scipy>=1.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=3.0",
+    "black>=22.0",
+    "ruff>=0.0.250",
+]
+examples = [
+    "jupyter>=1.0",
+    "ipykernel>=6.0",
+    "tqdm>=4.60",
+]
+
+[project.urls]
+Homepage = "https://github.com/codiefreeman/inverse-gas-chromatography"
+Repository = "https://github.com/codiefreeman/inverse-gas-chromatography"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"
+
+[tool.black]
+line-length = 100
+target-version = ["py38"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
