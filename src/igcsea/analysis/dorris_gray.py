@@ -1,0 +1,177 @@
+"""Dorris-Gray alkane analysis for IGC-SEA data.
+
+This module implements the Dorris-Gray method for determining dispersive
+surface energy from n-alkane retention volumes.
+"""
+
+from typing import Optional
+
+import numpy as np
+import pandas as pd
+
+from igcsea.core.constants import ALKANE_CARBON_NUMBERS, R
+from igcsea.core.models import IGCResult
+
+
+def calculate_rtlnv(
+    volume: np.ndarray | float,
+    temperature: np.ndarray | float,
+    gas_constant: float = R,
+) -> np.ndarray | float:
+    """Calculate RT·ln(V) for dispersive energy analysis.
+
+    The Dorris-Gray parameter RT·ln(V) is used in determining dispersive
+    surface energy from n-alkane retention volumes. This quantity is
+    linearly related to the carbon number for alkanes.
+
+    Args:
+        volume: Specific retention volume in ml/g (scalar or array).
+        temperature: Column temperature in Kelvin (scalar or array).
+        gas_constant: Universal gas constant in J/(mol·K). Defaults to R.
+
+    Returns:
+        RT·ln(V) in J/mol. Returns NaN for non-positive volumes.
+
+    Examples:
+        >>> calculate_rtlnv(10.0, 300.0)
+        5765.18...
+
+        >>> volumes = np.array([5, 10, 15])
+        >>> calculate_rtlnv(volumes, 300.0)
+        array([4028.85..., 5765.18..., 6794.43...])
+
+    References:
+        Dorris, G. M., & Gray, D. G. (1980). Adsorption of n-alkanes at zero
+        surface coverage on cellulose paper and wood fibers. Journal of Colloid
+        and Interface Science, 77(2), 353-362.
+    """
+    V = np.asarray(volume, dtype=float)
+    T = np.asarray(temperature, dtype=float)
+    return np.where(V > 0, gas_constant * T * np.log(V), np.nan)
+
+
+def prepare_alkane_data(
+    igc_result: IGCResult,
+    target_coverages: Optional[np.ndarray] = None,
+) -> pd.DataFrame:
+    """Prepare alkane probe data for Dorris-Gray analysis.
+
+    This function extracts alkane data from the free_energy table, which contains
+    the instrument's pre-calculated interpolated retention volumes. This ensures
+    accurate RT·ln(V) calculations that match the instrument's output.
+
+    Args:
+        igc_result: Parsed IGC-SEA result.
+        target_coverages: Unused (kept for API compatibility). The free_energy
+            table already has standard coverage values.
+
+    Returns:
+        DataFrame with columns:
+        - Solvent
+        - Target Fractional Surface Coverage
+        - Interpolated Retention Volume (Com)
+        - Column Temperature [Kelvin]
+        - Carbon Number
+        - RTlnVg (RT·ln(V) in J/mol)
+
+    Examples:
+        >>> result = parse_igc_csv("data.csv")
+        >>> alkane_data = prepare_alkane_data(result)
+        >>> print(alkane_data[alkane_data["Solvent"] == "HEPTANE"])
+    """
+    # Extract alkane data from free_energy table
+    # This table has pre-calculated "Interpolated Retention Volume (Com)" values
+    free = igc_result.free_energy.copy()
+
+    # Rename columns to match expected output format
+    alkane = free.rename(columns={
+        "Solvent Name": "Solvent",
+        "n/nm": "Target Fractional Surface Coverage",
+    })
+
+    # Filter for alkanes only
+    alkane = alkane[alkane["Solvent"].map(ALKANE_CARBON_NUMBERS).notna()].copy()
+    alkane["Carbon Number"] = alkane["Solvent"].map(ALKANE_CARBON_NUMBERS)
+
+    # Calculate RT·ln(V) using the pre-calculated interpolated retention volumes
+    alkane["RTlnVg"] = calculate_rtlnv(
+        alkane["Interpolated Retention Volume (Com)"],
+        alkane["Column Temperature [Kelvin]"],
+    )
+
+    # Select and reorder columns for output
+    alkane = alkane[[
+        "Solvent",
+        "Target Fractional Surface Coverage",
+        "Interpolated Retention Volume (Com)",
+        "Column Temperature [Kelvin]",
+        "Carbon Number",
+        "RTlnVg",
+    ]].reset_index(drop=True)
+
+    return alkane
+
+
+def fit_dorris_gray(alkane_data: pd.DataFrame) -> pd.DataFrame:
+    """Fit linear regression for RT·ln(V) vs carbon number at each coverage.
+
+    For each coverage level, fits the model:
+        RT·ln(V) = slope * carbon_number + intercept
+
+    The slope is related to the dispersive surface energy per CH2 group.
+
+    Args:
+        alkane_data: DataFrame from prepare_alkane_data() with alkane data.
+
+    Returns:
+        DataFrame with columns:
+        - Target Fractional Surface Coverage
+        - slope: Linear fit slope (J/mol per carbon)
+        - intercept: Linear fit intercept (J/mol)
+        - r_squared: Goodness of fit (R²)
+
+    Examples:
+        >>> alkane_data = prepare_alkane_data(result)
+        >>> fits = fit_dorris_gray(alkane_data)
+        >>> print(fits)
+    """
+    results = []
+
+    for coverage in alkane_data["Target Fractional Surface Coverage"].unique():
+        subset = alkane_data[
+            alkane_data["Target Fractional Surface Coverage"] == coverage
+        ]
+
+        # Drop rows with NaN in RTlnVg
+        subset = subset.dropna(subset=["Carbon Number", "RTlnVg"])
+
+        if len(subset) < 2:
+            # Need at least 2 points for linear fit
+            results.append({
+                "Target Fractional Surface Coverage": coverage,
+                "slope": np.nan,
+                "intercept": np.nan,
+                "r_squared": np.nan,
+            })
+            continue
+
+        x = subset["Carbon Number"].to_numpy(float)
+        y = subset["RTlnVg"].to_numpy(float)
+
+        # Linear fit: y = mx + b
+        slope, intercept = np.polyfit(x, y, 1)
+
+        # Calculate R²
+        y_pred = slope * x + intercept
+        ss_res = np.sum((y - y_pred) ** 2)
+        ss_tot = np.sum((y - np.mean(y)) ** 2)
+        r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else np.nan
+
+        results.append({
+            "Target Fractional Surface Coverage": coverage,
+            "slope": slope,
+            "intercept": intercept,
+            "r_squared": r_squared,
+        })
+
+    return pd.DataFrame(results)
