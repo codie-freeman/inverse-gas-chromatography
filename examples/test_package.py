@@ -133,7 +133,7 @@ ax.scatter(profile.coverage, profile.yab, label='YAB (acid-base)', s=50, color='
 ax.scatter(profile.coverage, profile.yt, label='YT (total)', s=50, color='tab:green')
 
 # Fitted curves
-x_fit = np.linspace(0, profile.coverage.max() * 1.2, 200)
+x_fit = np.linspace(0, profile.coverage.max() * 2.0, 200)
 yd_fit = profile.fit_params['yd']['c'] + profile.fit_params['yd']['a'] * np.exp(
     -profile.fit_params['yd']['b'] * x_fit
 )
@@ -147,6 +147,8 @@ yt_fit = profile.fit_params['yt']['c'] + profile.fit_params['yt']['a'] * np.exp(
 ax.plot(x_fit, yd_fit, color='tab:blue', linewidth=2, alpha=0.7)
 ax.plot(x_fit, yab_fit, color='tab:orange', linewidth=2, alpha=0.7)
 ax.plot(x_fit, yt_fit, color='tab:green', linewidth=2, alpha=0.7)
+
+ax.set_xlim(0, profile.coverage.max() * 2.0)
 
 ax.set_xlabel('Surface Coverage (n/nm)', fontsize=12)
 ax.set_ylabel('Surface Energy (mJ/m²)', fontsize=12)
