@@ -2,9 +2,9 @@
 
 **Version 0.1.0 (Alpha)**
 
-This repository contains a Python toolkit for processing **Inverse Gas Chromatography – Surface Energy Analysis (IGC‑SEA)** data. It's both a practical tool for analyzing my own IGC data and an educational project for deepening my understanding of surface chemistry and developing computational skills.
+This repository contains a Python toolkit for processing **Inverse Gas Chromatography – Surface Energy Analyzer (IGC‑SEA)** data. It's both a practical tool for analysing my own IGC data and an educational project for deepening my understanding of surface chemistry and developing computational skills.
 
-The toolkit takes messy instrument CSV exports and transforms them into analyzed surface energy profiles using established methods from the IGC literature.
+The toolkit takes messy instrument CSV exports and transforms them into analysed surface energy profiles using established methods from the IGC literature.
 
 ---
 
@@ -14,7 +14,7 @@ The toolkit takes messy instrument CSV exports and transforms them into analyzed
 
 In typical IGC-SEA research, the workflow looks like this:
 
-1. **Data export from proprietary software** (e.g., SMS Cirrus Plus analysis software)
+1. **Data export from proprietary software** (e.g., SMS Cirrus Plus analysis software, version 1.5)
 2. **Manual copy-paste into Excel** for plotting and further analysis
 3. **Limited analysis capabilities** in Excel:
    - Cannot reproduce exponential distribution plots
@@ -23,8 +23,6 @@ In typical IGC-SEA research, the workflow looks like this:
 4. **Incomplete data access** — not all analysis parameters are freely available from the proprietary software
 
 This manual workflow has several problems:
-- **Manual transcription errors** when copying data between software
-- **Poor reproducibility** — hard to track what transformations were applied
 - **Limited validation** — difficult to verify calculations against known methods
 - **Inflexible plotting** — Excel cannot easily produce publication-quality scientific figures
 - **No automation** — each new dataset requires the same repetitive manual steps
@@ -183,7 +181,7 @@ src/igcsea/
 This toolkit implements established methods from IGC surface energy literature:
 
 **Dorris-Gray Method** (1980)
-- Analyzes n-alkane (C6-C12) retention to determine dispersive surface energy
+- Analyses n-alkane retention to determine dispersive surface energy
 - Linear regression of RT·ln(Vₙ) vs. carbon number
 - Slope relates to dispersive component γᴰ
 
