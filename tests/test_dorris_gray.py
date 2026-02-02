@@ -43,6 +43,30 @@ def test_prepare_alkane_data(sample_igc_result):
     assert alkane_data["Carbon Number"].notna().all()
 
 
+def test_prepare_alkane_data_with_filter(sample_igc_result):
+    """Test alkane data preparation with user-specified alkane filter."""
+    # Get all available alkanes first
+    all_alkanes = prepare_alkane_data(sample_igc_result)
+    all_alkane_names = set(all_alkanes["Solvent"].unique())
+
+    # Test with subset of alkanes
+    selected_alkanes = ["HEPTANE", "OCTANE", "NONANE"]
+    # Only use alkanes that are actually in the data
+    selected_alkanes = [a for a in selected_alkanes if a in all_alkane_names]
+
+    if selected_alkanes:  # Only run if we have matching alkanes
+        filtered_data = prepare_alkane_data(sample_igc_result, alkanes=selected_alkanes)
+
+        # Check that only selected alkanes are present
+        assert set(filtered_data["Solvent"].unique()) == set(selected_alkanes)
+        assert len(filtered_data) <= len(all_alkanes)
+
+        # Check structure is still correct
+        assert "Carbon Number" in filtered_data.columns
+        assert "RTlnVg" in filtered_data.columns
+        assert filtered_data["Carbon Number"].notna().all()
+
+
 def test_fit_dorris_gray(sample_igc_result):
     """Test Dorris-Gray linear fitting."""
     alkane_data = prepare_alkane_data(sample_igc_result)
