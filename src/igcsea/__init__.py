@@ -1,22 +1,31 @@
 """IGC-SEA: Inverse Gas Chromatography Surface Energy Analysis toolkit.
 
 This package provides tools for analyzing IGC-SEA (Inverse Gas Chromatography -
-Surface Energy Analysis) data exports, including:
+Surface Energy Analysis) data exports.
 
-- Dorris-Gray alkane analysis
-- Polar probe free energy analysis
+Core functionality:
+- CSV parsing for multi-table IGC instrument exports
+- Coverage interpolation/extrapolation for standardization
+- Dorris-Gray alkane analysis for dispersive surface energy
 - Acid-base surface energy components (Della Volpe method)
-- Gutmann acid/base parameters (Ka, Kb)
-- Surface energy distributions vs area increment
-- Multi-CSV batch processing
-- Publication-quality plotting
+- Complete surface energy profiles with exponential fitting
 
-Examples:
-    >>> import igcsea
-    >>> result = igcsea.parse("path/to/file.csv")
-    >>> profile = igcsea.analyze_surface_energy(result)
-    >>> fig = igcsea.plot_energy_profile(profile)
-    >>> fig.savefig("energy_profile.png")
+Example usage:
+    >>> from igcsea.parsing import parse_igc_csv
+    >>> from igcsea.analysis import calculate_surface_energy_profile
+    >>>
+    >>> # Parse CSV export
+    >>> result = parse_igc_csv("path/to/igc_export.csv")
+    >>>
+    >>> # Generate complete surface energy profile
+    >>> profile = calculate_surface_energy_profile(result)
+    >>>
+    >>> # Access results
+    >>> print(profile.yd)   # Dispersive component
+    >>> print(profile.yab)  # Acid-base component
+    >>> print(profile.yt)   # Total surface energy
+
+See examples/test_package.py for a complete working example with visualization.
 """
 
 __version__ = "0.1.0"

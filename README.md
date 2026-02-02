@@ -1,99 +1,281 @@
-# IGC‑SEA Data Processing Toolkit (Early Draft)
+# IGC‑SEA Data Processing Toolkit
 
-This repository contains an early‑stage Python toolkit for processing **Inverse Gas Chromatography – Surface Energy Analysis (IGC‑SEA)** data.
+**Version 0.1.0 (Alpha)**
 
-Right now, the main purpose of this project is to **get from messy instrument CSV exports to usable data for analysis**, rather than to build a perfect, general‑purpose CSV parser. The parsing code works, but it’s something I plan to revisit and improve as my skills grow.
+This repository contains a Python toolkit for processing **Inverse Gas Chromatography – Surface Energy Analysis (IGC‑SEA)** data. It's both a practical tool for analyzing my own IGC data and an educational project for deepening my understanding of surface chemistry and developing computational skills.
 
----
-
-## Project goals
-
-- **Parse IGC‑SEA CSV exports** that contain multiple tables in a single sheet (free energy, dispersive surface energy, injection items, etc.).
-- **Extract and clean key tables** into structured `pandas` DataFrames.
-- **Compute surface energy components**, including:
-  - `yd` — dispersive component  
-  - `yab` — acid–base component  
-  - `yt` — total surface energy (`yt = yd + yab`)
-- **Generate basic plots and profiles** of surface energy vs surface coverage.
-- **Provide a foundation** for more advanced modelling and visualisation later.
-
-This is primarily a **data analysis and processing project**, not a polished parsing library (yet).
+The toolkit takes messy instrument CSV exports and transforms them into analyzed surface energy profiles using established methods from the IGC literature.
 
 ---
 
-## How the parser was created
+## Why this toolkit?
 
-The CSV parser in this project was developed using **GitHub Copilot** as an assistive coding tool.
+### The current workflow problem
 
-- I defined the problem: multi‑table IGC‑SEA CSV exports with section titles like *“Free Energy”*, *“Dispersive Surface Energy”*, and *“Injection Items”*.
-- My initial attempts at writing the parser from scratch had limited success.
-- I then used GitHub Copilot to help generate the parsing logic, including:
-  - detecting section titles
-  - finding header rows
-  - slicing out tables
-  - handling blank rows
-  - doing basic numeric conversion
+In typical IGC-SEA research, the workflow looks like this:
 
-The result is a parser that **mostly works for my current dataset and use case**, but:
+1. **Data export from proprietary software** (e.g., SMS Cirrus Plus analysis software)
+2. **Manual copy-paste into Excel** for plotting and further analysis
+3. **Limited analysis capabilities** in Excel:
+   - Cannot reproduce exponential distribution plots
+   - Poor handling of non-linear thermodynamic models
+   - No programmatic control over equations or fitting procedures
+4. **Incomplete data access** — not all analysis parameters are freely available from the proprietary software
 
-- it is **not yet generalised** for all possible IGC‑SEA exports  
-- it will likely need refactoring and hardening in the future  
+This manual workflow has several problems:
+- **Manual transcription errors** when copying data between software
+- **Poor reproducibility** — hard to track what transformations were applied
+- **Limited validation** — difficult to verify calculations against known methods
+- **Inflexible plotting** — Excel cannot easily produce publication-quality scientific figures
+- **No automation** — each new dataset requires the same repetitive manual steps
 
-I consider this parser a **first working draft**, created with heavy assistance from Copilot, which I plan to revisit when I’m more confident with Python, `pandas`, and software design.
+### What this toolkit provides
 
----
+**igcsea** addresses these limitations by providing:
 
-## Current components
+✓ **Automated parsing** of multi-file CSV exports from IGC instruments
+✓ **Complete parameter extraction** including:
+  - Peak center-of-mass (COM) parameters
+  - Della Volpe acid-base parameters (γₛ⁺, γₛ⁻, γᴬᴮ)
+  - Dorris-Gray dispersive parameters (γᴰ)
+  - Polarisation parameters and retention volumes
 
-- **`parse_sugar_se`**  
-  A function that reads a specific IGC‑SEA CSV export and returns a dictionary of `pandas` DataFrames, e.g.:
-  - `free_energy`
-  - `dispersive_surface_energy`
-  - `injection_items`
+✓ **Independent validation** against proprietary software outputs to ensure scientific correctness
+✓ **Full control** over thermodynamic equations, fitting procedures, and analysis methods
+✓ **Reproducible workflows** with transparent calculations and version-controlled code
+✓ **Publication-ready outputs** with customizable plots and data exports
+✓ **Foundation for expansion** — a platform that can grow to include:
+  - Exponential distribution plots
+  - BET-style surface energy distributions
+  - Flow-rate normalization
+  - Retention time corrections
+  - Advanced thermodynamic modeling
 
-- **Free energy processing**  
-  From the `free_energy` table, I extract:
-  - surface coverage (`n/nm`)
-  - solvent name
-  - polar free energy (`En. (Pol Com)`)
-
-  These are then used to compute acid–base related quantities.
-
-- **Surface energy components**  
-  Using processed data, I compute:
-  - `yd` — dispersive surface energy  
-  - `yab` — acid–base surface energy  
-  - `yt` — total surface energy (`yt = yd + yab`)
-
-- **Basic plotting**  
-  Simple plots of `yd`, `yab`, and `yt` vs `n/nm` are implemented to visualise how surface energy changes with coverage.
+By replacing manual Excel workflows with validated Python code, this toolkit improves **data integrity, transparency, and reproducibility** in IGC surface energy research.
 
 ---
 
-## Status and future work
+## What this toolkit does
 
-This project is **very much a work in progress**. Planned improvements include:
+**igcsea** provides a complete workflow for IGC-SEA data analysis:
 
-- Refactoring the parser to be:
-  - more robust to format changes  
-  - less hard‑coded to a single file layout  
-- Adding clearer validation and error messages.
-- Building a more structured analysis pipeline for:
-  - acid–base parameter extraction  
-  - exponential distribution regression  
-  - γᴰ, γᴬᴮ, γᵀ profiling
-- Improving documentation and examples.
+1. **Parse complex CSV exports** from IGC instruments (like SMS Cirrus Plus)
+   - Extracts multiple tables from single-file exports
+   - Handles encoding issues and numeric conversion automatically
+   - Returns structured data models (not just raw DataFrames)
 
-For now, the repository serves as:
+2. **Standardize coverage points** through interpolation/extrapolation
+   - Maps retention volumes to consistent surface coverage values
+   - Enables comparison across different temperature conditions
 
-- a **learning space** for scientific Python and data processing  
-- a **practical tool** for analysing my own IGC‑SEA data  
-- a **starting point** that I will refine as I become more competent
+3. **Calculate dispersive surface energy** using the **Dorris-Gray method**
+   - Analyzes n-alkane (C6-C12) retention data
+   - Performs linear regression to determine dispersive component (γᴰ)
+   - Provides goodness-of-fit metrics (R²)
+
+4. **Determine acid-base components** using the **Della Volpe approach**
+   - Uses polar probe molecules (ethyl acetate and dichloromethane)
+   - Calculates acidic (γₛ⁺) and basic (γₛ⁻) surface parameters
+   - Computes acid-base contribution (γᴬᴮ)
+
+5. **Generate complete surface energy profiles**
+   - Combines dispersive and acid-base components
+   - Calculates total surface energy: **γᵀ = γᴰ + γᴬᴮ**
+   - Fits exponential asymptotic models to coverage-energy relationships
+
+6. **Create publication-quality visualizations**
+   - Multi-panel Dorris-Gray plots with fit statistics
+   - Surface energy component profiles with exponential fits
+
+This is primarily a **learning project and personal research tool**, not production software. I'm refining it as I develop both my understanding of IGC theory and my Python skills.
 
 ---
 
-## Use of AI tools
+## Quick start
 
-This project was developed with the assistance of **GitHub Copilot** for code suggestions and boilerplate generation.
+### Installation
 
-All domain decisions (how to interpret the IGC‑SEA export, which tables to extract, what to compute from them) were made by me. Copilot helped turn those ideas into working code more quickly, especially for the parser, which I intend to revisit and improve over time.
+```bash
+# Clone the repository
+git clone https://github.com/codiefreeman/inverse-gas-chromatography.git
+cd inverse-gas-chromatography
+
+# Install in development mode
+pip install -e ".[dev]"
+```
+
+### Basic usage
+
+```python
+from igcsea.parsing import parse_igc_csv
+from igcsea.analysis import (
+    interpolate_to_standard_coverages,
+    prepare_alkane_data,
+    fit_dorris_gray,
+    calculate_acid_base_params,
+    calculate_surface_energy_profile
+)
+
+# Parse the CSV export
+result = parse_igc_csv("data/examples/sample_igc_export.csv")
+
+# Standardize to target coverages
+target_coverages = [0.005, 0.01, 0.025, 0.05, 0.10, 0.14]
+interp_data = interpolate_to_standard_coverages(result, target_coverages)
+
+# Perform Dorris-Gray analysis on alkanes
+alkane_data = prepare_alkane_data(interp_data)
+dorris_gray_fits = fit_dorris_gray(alkane_data)
+
+# Calculate acid-base parameters (Della Volpe method)
+acid_base = calculate_acid_base_params(interp_data)
+
+# Generate complete surface energy profile with exponential fits
+profile = calculate_surface_energy_profile(interp_data)
+
+# Verify: yt = yd + yab
+print(f"Total energy: {profile.yt}")
+print(f"Sum of components: {profile.yd + profile.yab}")
+```
+
+See [examples/test_package.py](examples/test_package.py) for a complete working example with visualization.
+
+### Running tests
+
+```bash
+pytest tests/
+```
+
+The test suite includes comprehensive unit tests for all analysis modules, using the sample CSV data as a fixture.
+
+---
+
+## Project structure
+
+```
+src/igcsea/
+├── core/                  # Data models and constants
+│   ├── models.py         # IGCResult, SurfaceEnergyProfile, AcidBaseParams
+│   └── constants.py      # Physical constants, alkane data, probe parameters
+├── parsing/              # CSV parsing
+│   └── parser.py         # Multi-table CSV export parser
+├── analysis/             # Analysis modules
+│   ├── interpolation.py  # Coverage interpolation/extrapolation
+│   ├── dorris_gray.py    # Dispersive energy (Dorris-Gray method)
+│   ├── acid_base.py      # Acid-base components (Della Volpe method)
+│   └── surface_energy.py # Complete profile with exponential fitting
+├── plotting/             # Visualization (in development)
+└── utils/                # Utilities (in development)
+```
+
+**Key modules:**
+
+- **`igcsea.parsing.parse_igc_csv()`**: Parses multi-table IGC CSV exports into structured `IGCResult` objects
+- **`igcsea.analysis.interpolate_to_standard_coverages()`**: Standardizes retention data to target coverage values
+- **`igcsea.analysis.fit_dorris_gray()`**: Performs Dorris-Gray linear regression on alkane data
+- **`igcsea.analysis.calculate_acid_base_params()`**: Computes γₛ⁺, γₛ⁻, and γᴬᴮ using Della Volpe method
+- **`igcsea.analysis.calculate_surface_energy_profile()`**: Generates complete γᴰ, γᴬᴮ, γᵀ profiles with exponential fits
+
+---
+
+## Scientific methods implemented
+
+This toolkit implements established methods from IGC surface energy literature:
+
+**Dorris-Gray Method** (1980)
+- Analyzes n-alkane (C6-C12) retention to determine dispersive surface energy
+- Linear regression of RT·ln(Vₙ) vs. carbon number
+- Slope relates to dispersive component γᴰ
+
+**Della Volpe Acid-Base Analysis** (1991)
+- Uses polar probes (ethyl acetate and dichloromethane) to separate acid-base contributions
+- Calculates acidic (γₛ⁺) and basic (γₛ⁻) surface parameters
+- Computes acid-base component: γᴬᴮ = 2√(γₛ⁺ × γₛ⁻)
+
+**Exponential Asymptotic Fitting**
+- Models energy-coverage relationships: γ(n) = c + a·exp(-b·n)
+- Provides parameters for dispersive, acid-base, and total surface energy profiles
+
+All calculations use standard physical constants (R = 8.314 J/(mol·K), Avogadro's number) and probe-specific parameters from the literature.
+
+---
+
+## Status and future development
+
+This project is in **alpha** (v0.1.0). The core analysis pipeline is functional and **validated against SMS proprietary software outputs** to ensure scientific correctness.
+
+**Current focus:**
+- Improving the plotting module with publication-ready visualizations
+- Refining existing analysis methods and adding better error handling
+- Expanding documentation and examples
+- Fixing bugs and improving test coverage
+- Continuing validation against proprietary software for new features
+
+**Potential future expansion:**
+
+As this toolkit matures, it could expand to replicate more capabilities currently only available in proprietary IGC software:
+
+- **Advanced thermodynamic models**
+  - Exponential distribution plots for surface energy heterogeneity
+  - BET-style surface energy distribution analysis
+  - Non-linear model fitting for complex surface interactions
+
+- **Data preprocessing and corrections**
+  - Flow-rate normalization
+  - Retention time corrections
+  - Dead volume compensation
+  - Temperature-dependent parameter adjustments
+
+- **Batch processing and automation**
+  - Multi-file CSV processing pipelines
+  - Automated report generation
+  - Comparison across sample sets
+
+- **Extended parameter extraction**
+  - Full Gutmann acid-base number implementation (Ka, Kb)
+  - Work of adhesion calculations
+  - Spreading coefficients
+
+These expansions would further reduce dependence on proprietary software and improve reproducibility in IGC research.
+
+**What this project is:**
+- A learning space for scientific Python, data processing, and IGC surface chemistry
+- A practical tool for my own IGC-SEA data analysis, validated against commercial software
+- An educational resource for understanding IGC methods and computational analysis
+- A foundation for building open, reproducible IGC analysis workflows
+
+**What this project is not (yet):**
+- Production-ready software for broad distribution
+- A complete replacement for commercial IGC analysis software
+- Generalized to handle all possible IGC instrument formats
+
+I'm building this incrementally as both a useful research tool and a way to develop computational skills. Feedback and suggestions are welcome!
+
+---
+
+## Development with AI tools
+
+This project has been developed with assistance from AI coding tools, which has been part of the learning process:
+
+- **GitHub Copilot** helped create the initial CSV parser and boilerplate code
+- **Claude Code** has supported ongoing development, refactoring, and implementation of analysis methods
+
+All scientific decisions—which methods to implement, how to interpret IGC theory, what calculations to perform—are mine. The AI tools help translate those ideas into working Python code more efficiently, especially as I'm still developing my programming skills. I review and understand all generated code, and I'm using this project to learn proper software design patterns.
+
+This transparent approach to AI-assisted development is intentional: I want to learn *how* to code well, not just produce code. The toolkit works and produces correct results, but I recognize it will benefit from continued refinement as my skills grow.
+
+---
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Dependencies
+
+- Python ≥3.8
+- NumPy ≥1.21
+- Pandas ≥1.3
+- Matplotlib ≥3.4
+- SciPy ≥1.7
+
+See [pyproject.toml](pyproject.toml) for complete dependency information.
