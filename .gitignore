@@ -38,6 +38,10 @@ Thumbs.db
 data/*.csv
 !data/examples/*.csv
 
+# Generated outputs (plots, reports, etc.)
+outputs/*
+!outputs/.gitkeep
+
 # Virtual environments
 venv/
 env/
