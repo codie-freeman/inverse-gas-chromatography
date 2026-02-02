@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Test IGC-SEA Package - All modules in one script."""
 
+from pathlib import Path
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -26,10 +28,18 @@ print(f"  - Injection items: {result.injection_items.shape}")
 # 2. Dorris-Gray Alkane Analysis
 print("\n2. DORRIS-GRAY ALKANE ANALYSIS")
 print("-" * 60)
+
+# Default: use all available alkanes from the Free Energy table
 alkanes = prepare_alkane_data(result)
-print(f"✓ Alkanes: {sorted(alkanes['Solvent'].unique())}")
+print(f"✓ All available alkanes: {sorted(alkanes['Solvent'].unique())}")
 print(f"  Total points: {len(alkanes)}")
 print(f"  Coverage levels: {len(alkanes['Target Fractional Surface Coverage'].unique())}")
+
+# Optional: specify which alkanes to use (e.g., exclude hexane if it had poor retention)
+# Uncomment below to use a custom alkane range:
+# selected_alkanes = ["HEPTANE", "OCTANE", "NONANE", "DECANE"]
+# alkanes = prepare_alkane_data(result, alkanes=selected_alkanes)
+# print(f"✓ Using selected alkanes: {sorted(alkanes['Solvent'].unique())}")
 
 # Fit linear regression
 fits = fit_dorris_gray(alkanes)
@@ -74,6 +84,10 @@ print("✓ Math checks out!" if abs(difference).max() < 1e-10 else "⚠ Somethin
 print("\n6. CREATING PLOTS")
 print("-" * 60)
 
+# Ensure outputs directory exists
+output_dir = Path(__file__).parent.parent / "outputs"
+output_dir.mkdir(exist_ok=True)
+
 # Plot 1: RTlnV vs Carbon Number with regression lines and R²
 fig1, axes = plt.subplots(2, 3, figsize=(12, 7))
 axes = axes.ravel()
@@ -107,8 +121,8 @@ for ax, cov, fit_row in zip(axes, coverages, fits.itertuples()):
     ax.legend(fontsize=8, loc='lower right')
 
 plt.tight_layout()
-plt.savefig('dorris_gray_test.png', dpi=150)
-print("✓ Saved: dorris_gray_test.png")
+plt.savefig(output_dir / 'dorris_gray_test.png', dpi=150)
+print(f"✓ Saved: {output_dir / 'dorris_gray_test.png'}")
 
 # Plot 2: Surface Energy Components
 fig2, ax = plt.subplots(figsize=(10, 6))
@@ -141,8 +155,8 @@ ax.legend()
 ax.grid(True, alpha=0.3)
 
 plt.tight_layout()
-plt.savefig('surface_energy_test.png', dpi=150)
-print("✓ Saved: surface_energy_test.png")
+plt.savefig(output_dir / 'surface_energy_test.png', dpi=150)
+print(f"✓ Saved: {output_dir / 'surface_energy_test.png'}")
 
 print("\n" + "=" * 60)
 print("✅ ALL TESTS COMPLETE!")

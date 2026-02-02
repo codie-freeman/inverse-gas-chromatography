@@ -53,6 +53,7 @@ def calculate_rtlnv(
 def prepare_alkane_data(
     igc_result: IGCResult,
     target_coverages: Optional[np.ndarray] = None,
+    alkanes: Optional[list[str]] = None,
 ) -> pd.DataFrame:
     """Prepare alkane probe data for Dorris-Gray analysis.
 
@@ -64,6 +65,10 @@ def prepare_alkane_data(
         igc_result: Parsed IGC-SEA result.
         target_coverages: Unused (kept for API compatibility). The free_energy
             table already has standard coverage values.
+        alkanes: Optional list of alkane names to include in analysis. If None,
+            uses all alkanes found in the data. Use this to exclude alkanes with
+            poor retention or to specify a custom range. Example:
+            ["HEPTANE", "OCTANE", "NONANE", "DECANE"]
 
     Returns:
         DataFrame with columns:
@@ -76,8 +81,14 @@ def prepare_alkane_data(
 
     Examples:
         >>> result = parse_igc_csv("data.csv")
+        >>> # Use all available alkanes (default)
         >>> alkane_data = prepare_alkane_data(result)
-        >>> print(alkane_data[alkane_data["Solvent"] == "HEPTANE"])
+        >>>
+        >>> # Use only specific alkanes (e.g., exclude hexane)
+        >>> alkane_data = prepare_alkane_data(
+        ...     result,
+        ...     alkanes=["HEPTANE", "OCTANE", "NONANE", "DECANE"]
+        ... )
     """
     # Extract alkane data from free_energy table
     # This table has pre-calculated "Interpolated Retention Volume (Com)" values
@@ -91,6 +102,11 @@ def prepare_alkane_data(
 
     # Filter for alkanes only
     alkane = alkane[alkane["Solvent"].map(ALKANE_CARBON_NUMBERS).notna()].copy()
+
+    # Apply user-specified alkane filter if provided
+    if alkanes is not None:
+        alkane = alkane[alkane["Solvent"].isin(alkanes)].copy()
+
     alkane["Carbon Number"] = alkane["Solvent"].map(ALKANE_CARBON_NUMBERS)
 
     # Calculate RT·ln(V) using the pre-calculated interpolated retention volumes
