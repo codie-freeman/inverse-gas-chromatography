@@ -32,6 +32,7 @@ This manual workflow has several problems:
 **igcsea** addresses these limitations by providing:
 
 ✓ **Automated parsing** of multi-file CSV exports from IGC instruments
+
 ✓ **Complete parameter extraction** including:
   - Peak center-of-mass (COM) parameters
   - Della Volpe acid-base parameters (γₛ⁺, γₛ⁻, γᴬᴮ)
@@ -39,15 +40,19 @@ This manual workflow has several problems:
   - Polarisation parameters and retention volumes
 
 ✓ **Independent validation** against proprietary software outputs to ensure scientific correctness
+
 ✓ **Full control** over thermodynamic equations, fitting procedures, and analysis methods
+
 ✓ **Reproducible workflows** with transparent calculations and version-controlled code
-✓ **Publication-ready outputs** with customizable plots and data exports
+
+✓ **Publication-ready outputs** with customisable plots and data exports
+
 ✓ **Foundation for expansion** — a platform that can grow to include:
   - Exponential distribution plots
   - BET-style surface energy distributions
-  - Flow-rate normalization
+  - Flow-rate normalisation
   - Retention time corrections
-  - Advanced thermodynamic modeling
+  - Advanced thermodynamic modelling
 
 By replacing manual Excel workflows with validated Python code, this toolkit improves **data integrity, transparency, and reproducibility** in IGC surface energy research.
 
@@ -67,7 +72,7 @@ By replacing manual Excel workflows with validated Python code, this toolkit imp
    - Enables comparison across different temperature conditions
 
 3. **Calculate dispersive surface energy** using the **Dorris-Gray method**
-   - Analyzes n-alkane (C6-C12) retention data
+   - Analyses n-alkane (C6-C12) retention data
    - Performs linear regression to determine dispersive component (γᴰ)
    - Provides goodness-of-fit metrics (R²)
 
@@ -81,7 +86,7 @@ By replacing manual Excel workflows with validated Python code, this toolkit imp
    - Calculates total surface energy: **γᵀ = γᴰ + γᴬᴮ**
    - Fits exponential asymptotic models to coverage-energy relationships
 
-6. **Create publication-quality visualizations**
+6. **Create publication-quality visualisations**
    - Multi-panel Dorris-Gray plots with fit statistics
    - Surface energy component profiles with exponential fits
 
@@ -203,7 +208,7 @@ All calculations use standard physical constants (R = 8.314 J/(mol·K), Avogadro
 This project is in **alpha** (v0.1.0). The core analysis pipeline is functional and **validated against SMS proprietary software outputs** to ensure scientific correctness.
 
 **Current focus:**
-- Improving the plotting module with publication-ready visualizations
+- Improving the plotting module with publication-ready visualisations
 - Refining existing analysis methods and adding better error handling
 - Expanding documentation and examples
 - Fixing bugs and improving test coverage
@@ -219,7 +224,7 @@ As this toolkit matures, it could expand to replicate more capabilities currentl
   - Non-linear model fitting for complex surface interactions
 
 - **Data preprocessing and corrections**
-  - Flow-rate normalization
+  - Flow-rate normalisation
   - Retention time corrections
   - Dead volume compensation
   - Temperature-dependent parameter adjustments
@@ -245,7 +250,7 @@ These expansions would further reduce dependence on proprietary software and imp
 **What this project is not (yet):**
 - Production-ready software for broad distribution
 - A complete replacement for commercial IGC analysis software
-- Generalized to handle all possible IGC instrument formats
+- Generalised to handle all possible IGC instrument formats
 
 I'm building this incrementally as both a useful research tool and a way to develop computational skills. Feedback and suggestions are welcome!
 
