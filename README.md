@@ -39,8 +39,7 @@ This manual workflow has several problems:
   - Dorris-Gray dispersive parameters (γᴰ)
   - Polarisation parameters and retention volumes
 
-✓ **Independent validation** against proprietary software outputs to ensure scientific correctness
-
+✓ **Independent Testing** against proprietary software outputs to ensure scientific correctness
 ✓ **Full control** over thermodynamic equations, fitting procedures, and analysis methods
 
 ✓ **Reproducible workflows** with transparent calculations and version-controlled code
@@ -54,7 +53,7 @@ This manual workflow has several problems:
   - Retention time corrections
   - Advanced thermodynamic modelling
 
-By replacing manual Excel workflows with validated Python code, this toolkit improves **data integrity, transparency, and reproducibility** in IGC surface energy research.
+By replacing manual Excel workflows with robust Python code, this toolkit improves **data integrity, transparency, and reproducibility** in IGC surface energy research.
 
 ---
 
@@ -205,14 +204,14 @@ All calculations use standard physical constants (R = 8.314 J/(mol·K), Avogadro
 
 ## Status and future development
 
-This project is in **alpha** (v0.1.0). The core analysis pipeline is functional and **validated against SMS proprietary software outputs** to ensure scientific correctness.
+This project is in **alpha** (v0.1.0). The core analysis pipeline is functional and **tested against SMS proprietary software outputs for comparison purposes**.
 
 **Current focus:**
 - Improving the plotting module with publication-ready visualisations
 - Refining existing analysis methods and adding better error handling
 - Expanding documentation and examples
 - Fixing bugs and improving test coverage
-- Continuing validation against proprietary software for new features
+- Continued testing against proprietary software for new features
 
 **Potential future expansion:**
 
@@ -243,7 +242,7 @@ These expansions would further reduce dependence on proprietary software and imp
 
 **What this project is:**
 - A learning space for scientific Python, data processing, and IGC surface chemistry
-- A practical tool for my own IGC-SEA data analysis, validated against commercial software
+- A practical tool for my own IGC-SEA data analysis, tested against commercial software
 - An educational resource for understanding IGC methods and computational analysis
 - A foundation for building open, reproducible IGC analysis workflows
 
