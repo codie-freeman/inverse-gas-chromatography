@@ -39,8 +39,9 @@ This manual workflow has several problems:
   - Dorris-Gray dispersive parameters (γᴰ)
   - Polarisation parameters and retention volumes
 
-✓ **Independent Testing** against proprietary software outputs to ensure scientific correctness
-✓ **Full control** over thermodynamic equations, fitting procedures, and analysis methods
+✓ **Independent Testing** against proprietary software outputs to ensure scientific correctness 
+
+✓ **Full control** over thermodynamic equations, fitting procedures, and analysis methods 
 
 ✓ **Reproducible workflows** with transparent calculations and version-controlled code
 
@@ -86,10 +87,14 @@ By replacing manual Excel workflows with robust Python code, this toolkit improv
    - Fits exponential asymptotic models to coverage-energy relationships
 
 6. **Create publication-quality visualisations**
-   - Multi-panel Dorris-Gray plots with fit statistics
+   - Multi-panel Dorris-Gray plots with fit statisticsvv
    - Surface energy component profiles with exponential fits
 
 This is primarily a **learning project and personal research tool**, not production software. I'm refining it as I develop both my understanding of IGC theory and my Python skills.
+
+### Workflow 
+
+![igcsea Workflow](<docs/igcsea Flowchart.png>)
 
 ---
 
