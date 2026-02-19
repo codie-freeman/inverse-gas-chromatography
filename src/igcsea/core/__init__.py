@@ -1,6 +1,7 @@
 """Core data models and constants for IGC-SEA analysis."""
 
 from igcsea.core.constants import (
+    A_CH2,
     ALKANE_CARBON_NUMBERS,
     NA,
     PROBE_PARAMETERS,
@@ -17,6 +18,7 @@ __all__ = [
     # Constants
     "R",
     "NA",
+    "A_CH2",
     "ALKANE_CARBON_NUMBERS",
     "PROBE_PARAMETERS",
     "STANDARD_COVERAGES",

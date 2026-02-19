@@ -1,12 +1,17 @@
 """Physical constants and probe parameters for IGC-SEA analysis."""
 
-from typing import Dict
+from typing import Any, Dict
 
 # Universal gas constant (J/(mol·K))
 R = 8.31446261815324
 
 # Avogadro's number
-NA = 6.022e23
+NA = 6.02214076e23
+
+# Cross-sectional area of a CH2 group (m²)
+# Used in Dorris-Gray dispersive surface energy calculations.
+# Reference: Dorris & Gray (1980); ~6.1 Å² = 6.1×10⁻²⁰ m²
+A_CH2 = 6.101906620011447e-20
 
 # Alkane carbon numbers for Dorris-Gray analysis
 ALKANE_CARBON_NUMBERS = {
@@ -19,22 +24,410 @@ ALKANE_CARBON_NUMBERS = {
     "DODECANE": 12,
 }
 
-# Probe parameters for acid-base calculations
-# Area (A_probe) in m²
-# Lewis parameters (LP_probe) in J/m²
-# Values from SMS Cirrus Plus software and literature
-PROBE_PARAMETERS: Dict[str, Dict[str, float]] = {
-    "ETHYL ACETATE": {
-        "area": 3.3e-19,  # m²
-        "lp": 0.47567,  # J/m² (Lewis parameter)
-        "type": "basic",  # Basic probe (electron donor)
-    },
-    "DICHLOROMETHANE": {
-        "area": 2.45e-19,  # m²
-        "lp": 0.12458,  # J/m²
-        "type": "acidic",  # Acidic probe (electron acceptor)
-    },
-}
-
 # Standard target coverages for analysis (n/nm)
 STANDARD_COVERAGES = [0.005, 0.01, 0.025, 0.05, 0.10, 0.14]
+
+# Probe/solvent parameters database for IGC-SEA analysis.
+#
+# Keys per entry:
+#   area                       : cross-sectional area (m²)
+#   dispersive_surface_tension : dispersive component of surface tension (J/m²); None if unavailable
+#   mol_mass                   : molecular mass (g/mol)
+#   density                    : density at ~20 °C (g/mL)
+#   refractive_index           : refractive index (dimensionless)
+#   boiling_point              : boiling point (°C)
+#   acceptor_number            : Gutmann acceptor number (AN); None if unavailable
+#   donor_number               : Gutmann donor number (DN); None if unavailable
+#   lp                         : Lewis parameter (J/m²) — only for probes used in acid-base analysis
+#   type                       : probe role — "basic", "acidic", or absent for non-polar/unclassified
+#
+# All entries are keyed by UPPERCASE solvent name.
+# Users can override individual constants by passing a modified copy to analysis functions.
+PROBE_PARAMETERS: Dict[str, Dict[str, Any]] = {
+    "1,4-DIOXANE": {
+        "area": 3.14e-19,
+        "dispersive_surface_tension": 0.0332,
+        "mol_mass": 88.11,
+        "density": 1.034,
+        "refractive_index": 1.422,
+        "boiling_point": 100.85,
+        "acceptor_number": 4.32,
+        "donor_number": 14.8,
+    },
+    "1-BUTANOL": {
+        "area": 4.12e-19,
+        "dispersive_surface_tension": 0.0224,
+        "mol_mass": 74.12,
+        "density": 0.81,
+        "refractive_index": 1.399,
+        "boiling_point": 117.75,
+        "acceptor_number": 9.1,
+        "donor_number": 17.0,
+    },
+    "1-HEXANOL": {
+        "area": 6.54e-19,
+        "dispersive_surface_tension": 0.0256,
+        "mol_mass": 102.18,
+        "density": 0.814,
+        "refractive_index": 1.418,
+        "boiling_point": 156.35,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "1-PENTANOL": {
+        "area": 5.74e-19,
+        "dispersive_surface_tension": 0.0242,
+        "mol_mass": 88.15,
+        "density": 0.811,
+        "refractive_index": 1.409,
+        "boiling_point": 136.85,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "1-PROPANOL": {
+        "area": 4.02e-19,
+        "dispersive_surface_tension": 0.0217,
+        "mol_mass": 60.1,
+        "density": 0.804,
+        "refractive_index": 1.384,
+        "boiling_point": 96.85,
+        "acceptor_number": 9.9,
+        "donor_number": 18.0,
+    },
+    "2-PROPANOL": {
+        "area": 4.32e-19,
+        "dispersive_surface_tension": 0.0212,
+        "mol_mass": 60.1,
+        "density": 0.786,
+        "refractive_index": 1.3776,
+        "boiling_point": 82.25,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "ACETIC ACID": {
+        "area": 1.6e-19,
+        "dispersive_surface_tension": 0.0233,
+        "mol_mass": 60.05,
+        "density": 1.049,
+        "refractive_index": 1.37,
+        "boiling_point": 118.0,
+        "acceptor_number": 14.2,
+        "donor_number": 20.0,
+    },
+    "ACETONE": {
+        "area": 3.4e-19,
+        "dispersive_surface_tension": 0.0165,
+        "mol_mass": 58.08,
+        "density": 0.791,
+        "refractive_index": 1.359,
+        "boiling_point": 55.85,
+        "acceptor_number": 2.5,
+        "donor_number": 17.0,
+    },
+    "ACETONITRILE": {
+        "area": 2.14e-19,
+        "dispersive_surface_tension": 0.0275,
+        "mol_mass": 41.05,
+        "density": 0.782,
+        "refractive_index": 1.344,
+        "boiling_point": 81.55,
+        "acceptor_number": 4.7,
+        "donor_number": 14.1,
+    },
+    "BENZENE": {
+        "area": 4.1e-19,
+        "dispersive_surface_tension": 0.0286,
+        "mol_mass": 78.11,
+        "density": 0.879,
+        "refractive_index": 1.4979,
+        "boiling_point": 79.85,
+        "acceptor_number": 0.17,
+        "donor_number": 0.1,
+    },
+    "BUTYL ACETATE": {
+        "area": 3.96e-19,
+        "dispersive_surface_tension": 0.0242,
+        "mol_mass": 116.16,
+        "density": 0.882,
+        "refractive_index": 1.386,
+        "boiling_point": 97.85,
+        "acceptor_number": 1.3,
+        "donor_number": 18.3,
+    },
+    "CCL4": {
+        "area": 4.6e-19,
+        "dispersive_surface_tension": 0.0268,
+        "mol_mass": 153.82,
+        "density": 1.594,
+        "refractive_index": 1.46,
+        "boiling_point": 76.55,
+        "acceptor_number": 0.7,
+        "donor_number": None,
+    },
+    "CHLOROFORM": {
+        "area": 4.4e-19,
+        "dispersive_surface_tension": 0.025,
+        "mol_mass": 119.38,
+        "density": 1.483,
+        "refractive_index": 1.446,
+        "boiling_point": 60.85,
+        "acceptor_number": 5.4,
+        "donor_number": None,
+        "lp": 1.27,  # Lewis parameter (J/m²) for acid-base analysis
+        "type": "acidic",
+    },
+    "CYCLOHEXANE": {
+        "area": 3.9e-19,
+        "dispersive_surface_tension": 0.0255,
+        "mol_mass": 84.16,
+        "density": 0.779,
+        "refractive_index": 1.426,
+        "boiling_point": 80.75,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "DECANE": {
+        "area": 7.5e-19,
+        "dispersive_surface_tension": 0.0234,
+        "mol_mass": 142.15,
+        "density": 0.73,
+        "refractive_index": 1.4119,
+        "boiling_point": 174.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "DICHLOROMETHANE": {
+        "area": 2.45e-19,
+        "dispersive_surface_tension": 0.0245,
+        "mol_mass": 84.93,
+        "density": 1.325,
+        "refractive_index": 1.424,
+        "boiling_point": 39.85,
+        "acceptor_number": 3.9,
+        "donor_number": 0.0,
+        "lp": 0.12458,  # Lewis parameter (J/m²) for acid-base analysis
+        "type": "acidic",
+    },
+    "DIETHYLAMINE": {
+        "area": 4.6e-19,
+        "dispersive_surface_tension": 0.0175,
+        "mol_mass": 73.14,
+        "density": 0.74,
+        "refractive_index": 1.401,
+        "boiling_point": 78.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "DODECANE": {
+        "area": 8.7e-19,
+        "dispersive_surface_tension": 0.0251,
+        "mol_mass": 170.34,
+        "density": 0.749,
+        "refractive_index": 1.4212,
+        "boiling_point": 216.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "ETHANOL": {
+        "area": 3.53e-19,
+        "dispersive_surface_tension": 0.0211,
+        "mol_mass": 46.04,
+        "density": 0.789,
+        "refractive_index": 1.36,
+        "boiling_point": 77.85,
+        "acceptor_number": 10.3,
+        "donor_number": 19.0,
+    },
+    "ETHYL ACETATE": {
+        "area": 3.3e-19,
+        "dispersive_surface_tension": 0.0196,
+        "mol_mass": 88.11,
+        "density": 0.902,
+        "refractive_index": 1.372,
+        "boiling_point": 76.85,
+        "acceptor_number": 1.5,
+        "donor_number": 17.1,
+        "lp": 0.47567,  # Lewis parameter (J/m²) for acid-base analysis
+        "type": "basic",
+    },
+    "HEPTADECANE": {
+        "area": 1.16e-18,
+        "dispersive_surface_tension": 0.03214,
+        "mol_mass": 240.48,
+        "density": 0.777,
+        "refractive_index": 1.436,
+        "boiling_point": 301.85,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "HEPTANE": {
+        "area": 5.73e-19,
+        "dispersive_surface_tension": 0.0203,
+        "mol_mass": 100.21,
+        "density": 0.684,
+        "refractive_index": 1.3877,
+        "boiling_point": 98.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "HEXADECANE": {
+        "area": 1.1e-18,
+        "dispersive_surface_tension": 0.0309,
+        "mol_mass": 226.45,
+        "density": 0.773,
+        "refractive_index": 1.434,
+        "boiling_point": 287.5,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "HEXANAL": {
+        "area": 5.15e-19,
+        "dispersive_surface_tension": None,
+        "mol_mass": 100.16,
+        "density": 0.8335,
+        "refractive_index": 1.404,
+        "boiling_point": 129.6,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "HEXANE": {
+        "area": 5.15e-19,
+        "dispersive_surface_tension": 0.0184,
+        "mol_mass": 86.18,
+        "density": 0.66,
+        "refractive_index": 1.375,
+        "boiling_point": 68.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "METHANOL": {
+        "area": 2.41e-19,
+        "dispersive_surface_tension": 0.0181,
+        "mol_mass": 32.04,
+        "density": 0.791,
+        "refractive_index": 1.3288,
+        "boiling_point": 64.75,
+        "acceptor_number": 12.0,
+        "donor_number": 20.0,
+    },
+    "METHYL SALICYLATE": {
+        "area": 3.92e-19,
+        "dispersive_surface_tension": 0.025,
+        "mol_mass": 152.15,
+        "density": 1.174,
+        "refractive_index": 1.536,
+        "boiling_point": 221.85,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "NITROMETHANE": {
+        "area": 2.19e-19,
+        "dispersive_surface_tension": 0.0298,
+        "mol_mass": 61.04,
+        "density": 1.127,
+        "refractive_index": 1.382,
+        "boiling_point": 101.25,
+        "acceptor_number": 4.3,
+        "donor_number": 2.7,
+    },
+    "NONANE": {
+        "area": 6.9e-19,
+        "dispersive_surface_tension": 0.0227,
+        "mol_mass": 128.26,
+        "density": 0.718,
+        "refractive_index": 1.4054,
+        "boiling_point": 150.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "OCTANE": {
+        "area": 6.3e-19,
+        "dispersive_surface_tension": 0.0213,
+        "mol_mass": 114.23,
+        "density": 0.703,
+        "refractive_index": 1.3974,
+        "boiling_point": 126.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "PENTADECANE": {
+        "area": 1.04e-18,
+        "dispersive_surface_tension": 0.0296,
+        "mol_mass": 212.42,
+        "density": 0.769,
+        "refractive_index": 1.432,
+        "boiling_point": 269.85,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "PENTANE": {
+        "area": 4.6e-19,
+        "dispersive_surface_tension": 0.016,
+        "mol_mass": 72.15,
+        "density": 0.626,
+        "refractive_index": 1.3575,
+        "boiling_point": 36.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "PYRIDINE": {
+        "area": 3.13e-19,
+        "dispersive_surface_tension": 0.037,
+        "mol_mass": 79.1,
+        "density": 0.9819,
+        "refractive_index": 1.5093,
+        "boiling_point": 115.2,
+        "acceptor_number": 0.143,
+        "donor_number": 33.08,
+    },
+    "TETRADECANE": {
+        "area": 9.85e-19,
+        "dispersive_surface_tension": 0.0284,
+        "mol_mass": 198.4,
+        "density": 0.7628,
+        "refractive_index": 1.429,
+        "boiling_point": 252.85,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "TOLUENE": {
+        "area": 4.6e-19,
+        "dispersive_surface_tension": 0.0285,
+        "mol_mass": 92.14,
+        "density": 0.867,
+        "refractive_index": 1.496,
+        "boiling_point": 110.65,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "TRIDECANE": {
+        "area": 9.27e-19,
+        "dispersive_surface_tension": 0.0271,
+        "mol_mass": 184.37,
+        "density": 0.7564,
+        "refractive_index": 1.425,
+        "boiling_point": 233.85,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "UNDECANE": {
+        "area": 8.1e-19,
+        "dispersive_surface_tension": 0.0246,
+        "mol_mass": 156.31,
+        "density": 0.74,
+        "refractive_index": 1.4172,
+        "boiling_point": 195.0,
+        "acceptor_number": None,
+        "donor_number": None,
+    },
+    "WATER": {
+        "area": 1.05e-19,
+        "dispersive_surface_tension": 0.0218,
+        "mol_mass": 18.02,
+        "density": 0.998,
+        "refractive_index": 1.333,
+        "boiling_point": 99.85,
+        "acceptor_number": 15.1,
+        "donor_number": 18.0,
+    },
+}
