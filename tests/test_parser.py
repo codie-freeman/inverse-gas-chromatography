@@ -57,8 +57,8 @@ def test_parse_igc_csv_numeric_conversion(sample_igc_result):
     # Coverage should be numeric
     assert pd.api.types.is_numeric_dtype(sample_igc_result.free_energy["n/nm"])
 
-    # Solvent Name should remain as object/string
-    assert pd.api.types.is_object_dtype(sample_igc_result.free_energy["Solvent Name"])
+    # Solvent Name should remain as string (object or StringDtype depending on pandas version)
+    assert pd.api.types.is_string_dtype(sample_igc_result.free_energy["Solvent Name"])
 
 
 def test_parse_igc_csv_file_not_found():
