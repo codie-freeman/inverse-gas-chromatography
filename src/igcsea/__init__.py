@@ -30,7 +30,7 @@ See examples/test_package.py for a complete working example with visualization.
 
 __version__ = "0.1.0"
 
-# Import core models for easy access
+# Core models and constants
 from igcsea.core import (
     AcidBaseParams,
     ALKANE_CARBON_NUMBERS,
@@ -40,6 +40,18 @@ from igcsea.core import (
     STANDARD_COVERAGES,
     SurfaceEnergyProfile,
 )
+
+# High-level API — parsing
+from igcsea.parsing import parse_igc_csv
+
+# High-level API — analysis
+from igcsea.analysis.acid_base import calculate_acid_base_params
+from igcsea.analysis.manual_dispersive import (
+    calculate_dispersive_from_injections,
+    validate_against_sms,
+)
+from igcsea.analysis.peak_max import PeakComparisonResult, PeakMAXAnalyzer
+from igcsea.analysis.surface_energy import calculate_surface_energy_profile
 
 __all__ = [
     "__version__",
@@ -52,5 +64,16 @@ __all__ = [
     "ALKANE_CARBON_NUMBERS",
     "PROBE_PARAMETERS",
     "STANDARD_COVERAGES",
-    # High-level API functions will be added as we build them
+    # Parsing
+    "parse_igc_csv",
+    # Analysis — dispersive
+    "calculate_dispersive_from_injections",
+    "validate_against_sms",
+    # Analysis — acid-base
+    "calculate_acid_base_params",
+    # Analysis — full profile
+    "calculate_surface_energy_profile",
+    # Analysis — COM vs MAX comparison
+    "PeakMAXAnalyzer",
+    "PeakComparisonResult",
 ]
