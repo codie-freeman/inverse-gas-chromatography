@@ -50,10 +50,17 @@ def calculate_rtlnv(
     return np.where(V > 0, gas_constant * T * np.log(V), np.nan)
 
 
+_RETENTION_VOL_COLS = {
+    "COM": "Interpolated Retention Volume (Com)",
+    "MAX": "Interpolated Retention Volume (Max)",
+}
+
+
 def prepare_alkane_data(
     igc_result: IGCResult,
     target_coverages: Optional[np.ndarray] = None,
     alkanes: Optional[list[str]] = None,
+    retention_type: str = "COM",
 ) -> pd.DataFrame:
     """Prepare alkane probe data for Dorris-Gray analysis.
 
@@ -69,15 +76,21 @@ def prepare_alkane_data(
             uses all alkanes found in the data. Use this to exclude alkanes with
             poor retention or to specify a custom range. Example:
             ["HEPTANE", "OCTANE", "NONANE", "DECANE"]
+        retention_type: ``'COM'`` (centre of mass) or ``'MAX'`` (peak maximum).
+            Selects which interpolated retention volume column to use from the
+            free_energy table. Defaults to ``'COM'``.
 
     Returns:
         DataFrame with columns:
         - Solvent
         - Target Fractional Surface Coverage
-        - Interpolated Retention Volume (Com)
+        - Interpolated Retention Volume (Com/Max)
         - Column Temperature [Kelvin]
         - Carbon Number
         - RTlnVg (RT·ln(V) in J/mol)
+
+    Raises:
+        ValueError: If retention_type is not ``'COM'`` or ``'MAX'``.
 
     Examples:
         >>> result = parse_igc_csv("data.csv")
@@ -90,8 +103,20 @@ def prepare_alkane_data(
         ...     alkanes=["HEPTANE", "OCTANE", "NONANE", "DECANE"]
         ... )
     """
+    retention_type = retention_type.upper()
+    if retention_type not in _RETENTION_VOL_COLS:
+        raise ValueError(f"retention_type must be 'COM' or 'MAX', got {retention_type!r}")
+
+    if igc_result.free_energy is None:
+        raise ValueError(
+            "prepare_alkane_data() requires igc_result.free_energy to be present. "
+            "For injection-items-only exports use prepare_alkane_data_from_injections() "
+            "from igcsea.analysis.manual_dispersive instead."
+        )
+
+    vol_col = _RETENTION_VOL_COLS[retention_type]
+
     # Extract alkane data from free_energy table
-    # This table has pre-calculated "Interpolated Retention Volume (Com)" values
     free = igc_result.free_energy.copy()
 
     # Rename columns to match expected output format
@@ -111,7 +136,7 @@ def prepare_alkane_data(
 
     # Calculate RT·ln(V) using the pre-calculated interpolated retention volumes
     alkane["RTlnVg"] = calculate_rtlnv(
-        alkane["Interpolated Retention Volume (Com)"],
+        alkane[vol_col],
         alkane["Column Temperature [Kelvin]"],
     )
 
@@ -119,7 +144,7 @@ def prepare_alkane_data(
     alkane = alkane[[
         "Solvent",
         "Target Fractional Surface Coverage",
-        "Interpolated Retention Volume (Com)",
+        vol_col,
         "Column Temperature [Kelvin]",
         "Carbon Number",
         "RTlnVg",

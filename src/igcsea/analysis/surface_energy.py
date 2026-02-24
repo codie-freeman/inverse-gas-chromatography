@@ -12,6 +12,12 @@ from scipy.optimize import curve_fit
 from igcsea.analysis.acid_base import calculate_acid_base_params
 from igcsea.core.models import IGCResult, SurfaceEnergyProfile
 
+# SMS dispersive surface energy column names keyed by retention type
+_DISPERSIVE_COLS = {
+    "COM": "Disp. Surf. En. (mJ/m^2) - DnG & Com",
+    "MAX": "Disp. Surf. En. (mJ/m^2) - DnG & Max",
+}
+
 
 def exp_asym(x: np.ndarray, c: float, a: float, b: float) -> np.ndarray:
     """Exponential asymptotic model for surface energy vs coverage.
@@ -79,6 +85,7 @@ def fit_exponential_decay(
 def calculate_surface_energy_profile(
     igc_result: IGCResult,
     fit_exponential: bool = True,
+    retention_type: str = "COM",
 ) -> SurfaceEnergyProfile:
     """Calculate complete surface energy profile (yd, yab, yt).
 
@@ -92,22 +99,53 @@ def calculate_surface_energy_profile(
         igc_result: Parsed IGC-SEA result.
         fit_exponential: If True, fit exponential models to yd, yab, yt.
             Defaults to True.
+        retention_type: ``'COM'`` (centre of mass) or ``'MAX'`` (peak maximum).
+            Selects which SMS dispersive surface energy column to use as yd.
+            Defaults to ``'COM'``.
 
     Returns:
         SurfaceEnergyProfile with coverage, yd, yab, yt arrays and optional
         fit parameters.
+
+    Raises:
+        ValueError: If dispersive_surface_energy or free_energy is None, or if
+            retention_type is not ``'COM'`` or ``'MAX'``.
 
     Examples:
         >>> result = parse_igc_csv("data.csv")
         >>> profile = calculate_surface_energy_profile(result)
         >>> print(f"YD at 0.005: {profile.yd[0]:.2f} mJ/m²")
         >>> print(f"Fit params: {profile.fit_params['yd']}")
+        >>>
+        >>> # Use peak-maximum retention volumes for yd
+        >>> profile_max = calculate_surface_energy_profile(result, retention_type="MAX")
     """
-    # Extract dispersive component (yd)
+    retention_type = retention_type.upper()
+    if retention_type not in _DISPERSIVE_COLS:
+        raise ValueError(f"retention_type must be 'COM' or 'MAX', got {retention_type!r}")
+
+    if igc_result.dispersive_surface_energy is None:
+        raise ValueError(
+            "calculate_surface_energy_profile() requires "
+            "igc_result.dispersive_surface_energy to be present. "
+            "This table is absent from injection-items-only CSV exports."
+        )
+    if igc_result.free_energy is None:
+        raise ValueError(
+            "calculate_surface_energy_profile() requires "
+            "igc_result.free_energy to be present (needed for acid-base calculation). "
+            "This table is absent from injection-items-only CSV exports."
+        )
+
+    # Extract dispersive component (yd) from the SMS-calculated table
     dse = igc_result.dispersive_surface_energy
-    yd_df = dse[["n/nm", "Disp. Surf. En. (mJ/m^2) - DnG & Com"]].rename(
-        columns={"Disp. Surf. En. (mJ/m^2) - DnG & Com": "yd"}
-    ).copy()
+    disp_col = _DISPERSIVE_COLS[retention_type]
+    if disp_col not in dse.columns:
+        raise ValueError(
+            f"Column {disp_col!r} not found in dispersive_surface_energy. "
+            f"Available columns: {list(dse.columns)}"
+        )
+    yd_df = dse[["n/nm", disp_col]].rename(columns={disp_col: "yd"}).copy()
 
     # Calculate acid-base component (yab)
     acid_base = calculate_acid_base_params(igc_result)
