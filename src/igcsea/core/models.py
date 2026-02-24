@@ -31,16 +31,17 @@ class IGCResult:
         >>> print(f"Parsed from: {result.source_path}")
     """
 
-    free_energy: pd.DataFrame
-    dispersive_surface_energy: pd.DataFrame
     injection_items: pd.DataFrame
     source_path: Path
+    free_energy: Optional[pd.DataFrame] = None
+    dispersive_surface_energy: Optional[pd.DataFrame] = None
 
-    def as_dict(self) -> Dict[str, pd.DataFrame]:
+    def as_dict(self) -> Dict[str, Optional[pd.DataFrame]]:
         """Convert to dictionary of DataFrames.
 
         Returns:
-            Dictionary with keys 'free_energy', 'dispersive_surface_energy', 'injection_items'
+            Dictionary with keys 'free_energy', 'dispersive_surface_energy', 'injection_items'.
+            Values are None for tables not present in the source CSV.
         """
         return {
             "free_energy": self.free_energy,
@@ -49,7 +50,7 @@ class IGCResult:
         }
 
     def to_csv_dir(self, output_dir: Path) -> None:
-        """Export all tables to separate CSV files in a directory.
+        """Export available tables to separate CSV files in a directory.
 
         Args:
             output_dir: Directory to write CSV files to. Will be created if it doesn't exist.
@@ -57,11 +58,14 @@ class IGCResult:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.free_energy.to_csv(output_dir / "free_energy.csv", index=False)
-        self.dispersive_surface_energy.to_csv(
-            output_dir / "dispersive_surface_energy.csv", index=False
-        )
         self.injection_items.to_csv(output_dir / "injection_items.csv", index=False)
+
+        if self.free_energy is not None:
+            self.free_energy.to_csv(output_dir / "free_energy.csv", index=False)
+        if self.dispersive_surface_energy is not None:
+            self.dispersive_surface_energy.to_csv(
+                output_dir / "dispersive_surface_energy.csv", index=False
+            )
 
 
 @dataclass
@@ -140,8 +144,10 @@ class AcidBaseParams:
 
     Attributes:
         coverage: Array of surface coverage values (n/nm).
-        ys_plus: Array of acidic component values (ys+) from dichloromethane probe.
-        ys_minus: Array of basic component values (ys-) from ethyl acetate probe.
+        ys_plus: Array of Lewis acid surface energy component values (γS⁺, mJ/m²),
+            derived from the basic probe (ethyl acetate; LP = γEA⁻).
+        ys_minus: Array of Lewis base surface energy component values (γS⁻, mJ/m²),
+            derived from the acidic probe (dichloromethane; LP = γDCM⁺).
         yab: Array of acid-base component values (mJ/m²), yab = 2·sqrt(ys+·ys-).
         ka: Array of Gutmann acid numbers.
         kb: Array of Gutmann base numbers.

@@ -190,16 +190,24 @@ def parse_igc_csv(path: Path | str) -> IGCResult:
 
     rows = _read_rows(path)
 
-    free_energy = extract_section_table(
-        rows,
-        "Free Energy",
-        stop_titles=["Dispersive Surface Energy", "Injection Items"],
-    )
-    dispersive_surface_energy = extract_section_table(
-        rows,
-        "Dispersive Surface Energy",
-        stop_titles=["Injection Items"],
-    )
+    try:
+        free_energy = extract_section_table(
+            rows,
+            "Free Energy",
+            stop_titles=["Dispersive Surface Energy", "Injection Items"],
+        )
+    except ValueError:
+        free_energy = None
+
+    try:
+        dispersive_surface_energy = extract_section_table(
+            rows,
+            "Dispersive Surface Energy",
+            stop_titles=["Injection Items"],
+        )
+    except ValueError:
+        dispersive_surface_energy = None
+
     injection_items = extract_section_table(
         rows,
         "Injection Items",
@@ -207,8 +215,8 @@ def parse_igc_csv(path: Path | str) -> IGCResult:
     )
 
     return IGCResult(
-        free_energy=free_energy,
-        dispersive_surface_energy=dispersive_surface_energy,
         injection_items=injection_items,
         source_path=path,
+        free_energy=free_energy,
+        dispersive_surface_energy=dispersive_surface_energy,
     )

@@ -10,7 +10,6 @@ NA = 6.02214076e23
 
 # Cross-sectional area of a CH2 group (m²)
 # Used in Dorris-Gray dispersive surface energy calculations.
-# Reference: Dorris & Gray (1980); ~6.1 Å² = 6.1×10⁻²⁰ m²
 A_CH2 = 6.101906620011447e-20
 
 # Alkane carbon numbers for Dorris-Gray analysis

@@ -68,16 +68,20 @@ def interpolate_to_standard_coverages(
     # Build temperature lookup table
     temp_lookup = _build_temperature_lookup(inj, coverage_col)
 
-    # Apply interpolation per solvent
-    combined = data.groupby("Solvent", group_keys=False).apply(
-        lambda df: _interpolate_single_solvent(
-            df,
+    # Apply interpolation per solvent (explicit loop avoids pandas 3.0
+    # include_groups=False default, which drops the groupby key column)
+    groups = [
+        _interpolate_single_solvent(
+            group_df,
+            solvent_name=solvent_name,
             target_coverages=target_coverages,
             coverage_col=coverage_col,
             value_col=value_col,
             temp_lookup=temp_lookup,
         )
-    )
+        for solvent_name, group_df in data.groupby("Solvent")
+    ]
+    combined = pd.concat(groups, ignore_index=True)
 
     combined = combined.sort_values(
         ["Target Fractional Surface Coverage", "Solvent"]
@@ -124,6 +128,7 @@ def _build_temperature_lookup(
 
 def _interpolate_single_solvent(
     df: pd.DataFrame,
+    solvent_name: str,
     target_coverages: np.ndarray,
     coverage_col: str,
     value_col: str,
@@ -146,7 +151,7 @@ def _interpolate_single_solvent(
     Returns:
         DataFrame with interpolated values and closest actual measurements.
     """
-    solvent = df["Solvent"].iloc[0]
+    solvent = solvent_name
     df = df.sort_values(coverage_col).copy()
 
     x = df[coverage_col].to_numpy(float)
@@ -161,11 +166,14 @@ def _interpolate_single_solvent(
         "Target Fractional Surface Coverage": target_coverages,
     })
 
+    interp_col = f"{value_col} (interp)"
+    closest_val_col = f"Closest {value_col}"
+
     # Need at least 2 points for interpolation
     if len(xk) < 2:
         out["Closest Actual Fractional Surface Coverage"] = np.nan
-        out["Closest Sp. Ret Volume (Com) [ml/g]"] = np.nan
-        out["Sp. Ret Volume (Com) [ml/g] (interp)"] = np.nan
+        out[closest_val_col] = np.nan
+        out[interp_col] = np.nan
         out["Closest Column Temperature [Kelvin]"] = np.nan
         return out
 
@@ -188,7 +196,7 @@ def _interpolate_single_solvent(
         slope = (y1 - y0) / (x1 - x0)
         y_interp[right] = y1 + slope * (target_coverages[right] - x1)
 
-    out["Sp. Ret Volume (Com) [ml/g] (interp)"] = y_interp
+    out[interp_col] = y_interp
 
     # Find closest actual coverage for each target (for temperature lookup)
     closest_actual = np.empty_like(target_coverages, dtype=float)
@@ -211,7 +219,7 @@ def _interpolate_single_solvent(
         closest_spret[i] = yk[j]
 
     out["Closest Actual Fractional Surface Coverage"] = closest_actual
-    out["Closest Sp. Ret Volume (Com) [ml/g]"] = closest_spret
+    out[closest_val_col] = closest_spret
 
     # Merge temperature data from lookup table
     tmp = pd.DataFrame({
